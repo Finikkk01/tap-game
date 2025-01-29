@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FiN CoiN</title>
+    <title>Тапалка с кошельком</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -11,7 +11,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background: #f0f0f0;
+            background: linear-gradient(135deg, #f0f0f0, #d1e8ff);
             overflow: hidden;
         }
         h1 {
@@ -19,32 +19,35 @@
             margin-top: 20px;
         }
         #tapButton {
-            padding: 20px 40px;
-            font-size: 24px;
-            background: #ffcc00;
-            color: #333;
+            padding: 30px 60px;
+            font-size: 28px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: white;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
         #tapButton:active {
-            transform: scale(0.95);
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
         }
-        #score {
-            font-size: 28px;
+        #wallet {
+            font-size: 24px;
             color: #333;
-            margin-top: 20px;
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.8);
             padding: 10px 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            cursor: pointer;
         }
         .coin {
             position: absolute;
@@ -62,23 +65,24 @@
         .controls {
             position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 20px;
             display: flex;
             gap: 10px;
         }
         .controls button {
             padding: 10px 20px;
             font-size: 16px;
-            background: #007bff;
+            background: linear-gradient(135deg, #007bff, #0056b3);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
         .controls button:active {
             transform: scale(0.95);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         .modal {
             display: none;
@@ -101,14 +105,12 @@
     </style>
 </head>
 <body>
-    <h1>FiN CoiN</h1>
-    <button id="tapButton">!Тыдыщ!</button>
-    <div id="score">Монет: 0</div>
+    <h1>Тапалка с кошельком</h1>
+    <button id="tapButton">ТАП!</button>
+    <div id="wallet" title="Нажмите, чтобы увидеть счет">💰 0</div>
 
     <!-- Кнопки управления -->
     <div class="controls">
-        <button id="levelButton">Уровень: Легкий</button>
-        <button id="boosterButton">Бустер x2</button>
         <button id="leaderboardButton">Рейтинг</button>
     </div>
 
@@ -127,23 +129,17 @@
         Telegram.WebApp.ready();
 
         let score = 0;
-        let level = 1; // Уровень сложности (1 - легкий, 2 - средний, 3 - сложный)
-        let booster = 1; // Множитель очков
-        const leaderboard = []; // Рейтинговая таблица
-
         const tapButton = document.getElementById('tapButton');
-        const scoreDisplay = document.getElementById('score');
+        const wallet = document.getElementById('wallet');
         const tapSound = document.getElementById('tapSound');
-        const levelButton = document.getElementById('levelButton');
-        const boosterButton = document.getElementById('boosterButton');
         const leaderboardButton = document.getElementById('leaderboardButton');
         const leaderboardModal = document.getElementById('leaderboardModal');
         const leaderboardList = document.getElementById('leaderboardList');
 
-        // Обработчик нажатия на кнопку "!Тыдыщ!"
+        // Обработчик нажатия на кнопку "ТАП!"
         tapButton.addEventListener('click', (event) => {
-            score += booster; // Увеличиваем счет с учетом бустера
-            scoreDisplay.textContent = `Монет: ${score}`;
+            score++; // Увеличиваем счет
+            wallet.textContent = `💰 ${score}`;
 
             // Воспроизведение звука
             if (tapSound) {
@@ -155,28 +151,6 @@
             createCoins(event.clientX, event.clientY);
         });
 
-        // Обработчик изменения уровня сложности
-        levelButton.addEventListener('click', () => {
-            level = (level % 3) + 1; // Переключаем уровень (1 -> 2 -> 3 -> 1)
-            levelButton.textContent = `Уровень: ${getLevelName(level)}`;
-        });
-
-        // Обработчик активации бустера
-        boosterButton.addEventListener('click', () => {
-            if (score >= 50) { // Бустер стоит 50 монет
-                score -= 50;
-                booster = 2; // Активируем бустер x2
-                setTimeout(() => {
-                    booster = 1; // Деактивируем бустер через 10 секунд
-                    boosterButton.textContent = "Бустер x2";
-                }, 10000); // 10 секунд
-                boosterButton.textContent = "Бустер активен!";
-                scoreDisplay.textContent = `Монет: ${score}`;
-            } else {
-                alert("Недостаточно монет для бустера!");
-            }
-        });
-
         // Обработчик открытия рейтинга
         leaderboardButton.addEventListener('click', () => {
             updateLeaderboard();
@@ -185,12 +159,11 @@
 
         // Функция для создания падающих монет
         function createCoins(x, y) {
-            const coinCount = level * 5; // Количество монет зависит от уровня
-            for (let i = 0; i < coinCount; i++) {
+            for (let i = 0; i < 5; i++) { // Создаем 5 монет
                 const coin = document.createElement('div');
                 coin.className = 'coin';
-                coin.style.left = `${x + Math.random() * 300 - 300}px`; // Случайное смещение по X
-                coin.style.animationDuration = `${Math.random() * 1 + level}s`; // Скорость падения зависит от уровня
+                coin.style.left = `${x + Math.random() * 100 - 50}px`; // Случайное смещение по X
+                coin.style.animationDuration = `${Math.random() * 1 + 1}s`; // Случайная скорость падения
                 document.body.appendChild(coin);
 
                 // Удаляем монету после завершения анимации
@@ -213,16 +186,6 @@
         // Функция для закрытия модального окна
         function closeModal() {
             leaderboardModal.style.display = 'none';
-        }
-
-        // Функция для получения названия уровня
-        function getLevelName(level) {
-            switch (level) {
-                case 1: return "Легкий";
-                case 2: return "Средний";
-                case 3: return "Сложный";
-                default: return "Легкий";
-            }
         }
 
         console.log("Mini App инициализирован!");
