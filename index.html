@@ -238,55 +238,98 @@
 
         // Инициализация
         function init() {
-            function loadData() {
-    const saved = localStorage.getItem('tapGameData');
-    if(saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            gameData = {
-                ...gameData,
-                ...parsed,
-                lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
-                achievements: {
-                    total: parsed.achievements?.total || 0, // Важно сохранить общий заработок
-                    earned: {
-                        ...gameData.achievements.earned,
-                        ...parsed.achievements?.earned
-                    }
-                }
-            };
-        } catch(e) {
-            console.error('Ошибка загрузки данных:', e);
+            loadData();
+            setupEventListeners();
+            checkDailyBonus();
+            updateShopButton();
+            updateBalanceDisplay();
+            updateAchievements();
         }
-    }
-}
 
-// Обновляем функцию отображения достижений
-function updateAchievements() {
-    const list = document.getElementById('achievementsList');
-    if(list) {
-        list.innerHTML = `
-            <li style="margin-bottom: 15px; color: #ffd700;">Всего заработано: ${gameData.achievements.total} монет</li>
-            ${Object.entries(gameData.achievements.earned)
-                .sort((a, b) => a[0] - b[0])
-                .map(([amount, earned]) => `
-                    <li style="margin: 8px 0; display: flex; justify-content: space-between;">
-                        <span>${amount} монет:</span>
-                        <span>${earned ? '✅ Открыто' : '🔒 Закрыто'}</span>
-                    </li>
-                `).join('')}
-        `;
-    }
-}
+        // Загрузка данных
+        function loadData() {
+            const saved = localStorage.getItem('tapGameData');
+            if(saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    gameData = {
+                        ...gameData,
+                        ...parsed,
+                        lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
+                        achievements: {
+                            ...gameData.achievements,
+                            ...parsed.achievements
+                        }
+                    };
+                } catch(e) {
+                    console.error('Ошибка загрузки данных:', e);
+                }
+            }
+        }
 
-// В функции addCoins исправляем обновление общего заработка
-function addCoins(amount) {
-    gameData.balance += amount;
-    gameData.achievements.total += amount; // Увеличиваем ОБЩИЙ заработок
-    updateBalanceDisplay();
-    checkAchievements();
-    saveData();
-}
+        // Сохранение данных
+        function saveData() {
+            localStorage.setItem('tapGameData', JSON.stringify(gameData));
+        }
+
+        // Обработчики событий
+        function setupEventListeners() {
+            const tapBtn = document.getElementById('tapButton');
+            tapBtn.addEventListener('click', handleTap);
+            tapBtn.addEventListener('touchstart', handleTap);
+
+            document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
+            document.getElementById('dailyBtn').addEventListener('click', () => showModal('dailyModal'));
+            document.getElementById('achieveBtn').addEventListener('click', () => {
+                updateAchievements();
+                showModal('achievementsModal');
+            });
+        }
+
+        // Обработка тапов
+        function handleTap(e) {
+            const multiplier = gameData.upgrades.smart_tap ? 2 : 1;
+            addCoins(multiplier);
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = rect.left + rect.width/2;
+            const y = rect.top + rect.height/2;
+            generateCoins(x, y, 10);
+        }
+
+        // Генерация монет
+        function generateCoins(x, y, count) {
+            const wallet = document.getElementById('wallet').getBoundingClientRect();
+            
+            for(let i = 0; i < count; i++) {
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 100 + 50;
+                const startX = x + Math.cos(angle) * distance;
+                const startY = y + Math.sin(angle) * distance;
+
+                coin.animate([
+                    { transform: `translate(${startX}px, ${startY}px) scale(1)` },
+                    { transform: `translate(${wallet.x + 15}px, ${wallet.y + 15}px) scale(0)` }
+                ], {
+                    duration: 600 + Math.random() * 400,
+                    easing: 'ease-out'
+                }).onfinish = () => coin.remove();
+
+                document.body.appendChild(coin);
+            }
+        }
+
+        // Добавление монет
+        function addCoins(amount) {
+            gameData.balance += amount;
+            gameData.achievements.total += amount;
+            updateBalanceDisplay();
+            checkAchievements();
+            saveData();
+        }
 
         // Обновление баланса
         function updateBalanceDisplay() {
