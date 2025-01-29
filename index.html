@@ -3,59 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turbo Тапалка PRO</title>
+    <title>Galaxy Tap Revolution</title>
     <style>
+        :root {
+            --space-color: #0a0a2e;
+            --neon-blue: #00f3ff;
+            --gold: #ffd700;
+            --purple: #9d00ff;
+        }
+
         body {
             margin: 0;
             padding: 80px 20px 120px;
-            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            background: var(--space-color);
             min-height: 100vh;
             font-family: 'Arial', sans-serif;
             color: white;
-            overflow-x: hidden;
+            overflow: hidden;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, 
+                    rgba(255, 255, 255, 0.1) 0%, 
+                    rgba(0, 0, 0, 0) 100%),
+                linear-gradient(
+                    45deg,
+                    rgba(157, 0, 255, 0.1),
+                    rgba(0, 243, 255, 0.1)
+                );
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.3; 
+                transform: translateZ(0);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translateZ(100px);
+            }
         }
 
         .tap-container {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) rotateX(10deg);
             z-index: 100;
             touch-action: manipulation;
+            perspective: 1000px;
         }
 
         #tapButton {
-            width: 120px;
-            height: 120px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
-            background: radial-gradient(circle at 65% 15%, #ffd700, #ff8c00);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: radial-gradient(circle at 65% 15%, var(--gold), #ff8c00);
+            box-shadow: 
+                0 0 60px rgba(255, 215, 0, 0.7),
+                0 0 30px var(--purple);
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 32px;
             cursor: pointer;
-            transition: transform 0.1s;
-            touch-action: none;
+            transition: 
+                transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.3s;
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #tapButton::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 20%,
+                rgba(255,255,255,0.2) 50%,
+                transparent 80%
+            );
+            animation: button-glow 3s infinite linear;
+            transform: rotate(45deg);
+        }
+
+        @keyframes button-glow {
+            0% { transform: translateX(-150%) rotate(45deg); }
+            100% { transform: translateX(150%) rotate(45deg); }
         }
 
         #tapButton:active {
-            transform: scale(1.1);
+            transform: 
+                scale(1.15) 
+                rotate(15deg) 
+                translateZ(20px);
+            box-shadow: 
+                0 0 100px rgba(255, 215, 0, 0.9),
+                0 0 50px var(--purple);
         }
 
         .coin {
             position: fixed;
-            width: 24px;
-            height: 24px;
-            background: url('coin.png') center/contain no-repeat;
+            width: 28px;
+            height: 28px;
+            background: radial-gradient(circle at 30% 30%, var(--gold), #daa520);
+            border-radius: 50%;
             pointer-events: none;
             z-index: 999;
+            box-shadow: 0 0 20px var(--gold);
+            transform-style: preserve-3d;
+            animation: coin-rotate 2s infinite linear;
+        }
+
+        @keyframes coin-rotate {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            100% { transform: rotateY(360deg) rotateX(360deg); }
         }
 
         #wallet {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.7);
+            background: linear-gradient(45deg, #1a237e, #0d47a1);
             padding: 12px 25px;
             border-radius: 30px;
             display: flex;
@@ -64,16 +153,24 @@
             cursor: pointer;
             backdrop-filter: blur(5px);
             z-index: 1001;
+            border: 2px solid #448aff;
+            box-shadow: 0 0 25px rgba(68, 138, 255, 0.4);
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
         }
 
-        #withdrawBtn {
-            padding: 8px 15px;
-            border-radius: 15px;
-            background: #4CAF50;
-            border: none;
-            color: white;
-            cursor: not-allowed;
-            opacity: 0.7;
+        #wallet:hover {
+            transform: scale(1.05) translateZ(10px);
+            box-shadow: 0 0 35px rgba(68, 138, 255, 0.6);
+        }
+
+        #balance {
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ffd700, #ffab00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
 
         .control-panel {
@@ -90,11 +187,13 @@
             flex-wrap: wrap;
             justify-content: center;
             z-index: 1001;
+            border: 1px solid var(--neon-blue);
+            transform-style: preserve-3d;
         }
 
         .control-btn {
-            padding: 10px 15px;
-            border-radius: 12px;
+            padding: 12px 18px;
+            border-radius: 15px;
             background: linear-gradient(45deg, #2a2a72, #009ffd);
             border: none;
             color: white;
@@ -103,6 +202,32 @@
             white-space: nowrap;
             flex: 1 1 auto;
             text-align: center;
+            transition: transform 0.2s;
+            transform-style: preserve-3d;
+            display: inline-block;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05) translateZ(5px);
+        }
+
+        .wallet-panel {
+            background: linear-gradient(45deg, #1a237e, #0d47a1);
+            padding: 10px 25px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid #448aff;
+            box-shadow: 0 0 20px rgba(68, 138, 255, 0.3);
+            transform-style: preserve-3d;
+        }
+
+        #bottomBalance {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
 
         .modal {
@@ -110,25 +235,16 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
+            transform: translate(-50%, -50%) rotateX(15deg);
+            background: rgba(0, 0, 0, 0.95);
             padding: 25px;
             border-radius: 20px;
             width: 90%;
             max-width: 500px;
             backdrop-filter: blur(10px);
             z-index: 2000;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
+            border: 2px solid var(--neon-blue);
+            transform-style: preserve-3d;
         }
 
         .shop-item {
@@ -136,47 +252,36 @@
             padding: 15px;
             background: rgba(255,255,255,0.1);
             border-radius: 10px;
+            border: 1px solid var(--neon-blue);
         }
 
         .buy-btn {
-            padding: 8px 20px;
-            background: #4CAF50;
+            padding: 10px 25px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             border: none;
             border-radius: 8px;
             color: white;
             cursor: pointer;
-        }
-
-        .buy-btn[disabled] {
-            background: #666;
-            cursor: not-allowed;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1500;
+            transition: opacity 0.3s;
         }
 
         @media (max-width: 480px) {
+            #tapButton {
+                width: 120px;
+                height: 120px;
+                font-size: 24px;
+            }
+            
             .control-btn {
                 font-size: 12px;
                 padding: 8px 12px;
-            }
-            
-            #wallet {
-                padding: 10px 20px;
-                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
+    <div class="stars" id="starsContainer"></div>
+    
     <div class="tap-container">
         <button id="tapButton">ТАП!</button>
     </div>
@@ -184,123 +289,97 @@
     <div id="wallet">
         <span>💰</span>
         <span id="balance">0</span>
-        <button id="withdrawBtn">В процессе</button>
     </div>
 
     <div class="control-panel">
+        <div class="wallet-panel">
+            <span>🪙</span>
+            <span id="bottomBalance">0</span>
+        </div>
         <button class="control-btn" id="shopBtn">🛒 Магазин</button>
         <button class="control-btn" id="dailyBtn">🎁 Бонус</button>
         <button class="control-btn" id="achieveBtn">🏆 Достижения</button>
-        <button class="control-btn" id="settingsBtn">⚙️ Настройки</button>
     </div>
 
     <div id="shopModal" class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
-        <h2>🛒 Магазин улучшений</h2>
+        <h2>🛍️ Космический магазин</h2>
         <div class="shop-item">
             <h3>Умный тап (50 монет)</h3>
+            <p>Удваивает базовое значение тапа</p>
             <button class="buy-btn" id="buySmartTap" onclick="buyUpgrade('smart_tap')">Купить</button>
+        </div>
+        <div class="shop-item">
+            <h3>Космический множитель (1000 монет)</h3>
+            <p>Удваивает все доходы</p>
+            <button class="buy-btn" id="buyX2Tap" onclick="buyUpgrade('x2_tap')">Купить</button>
         </div>
     </div>
 
     <div id="dailyModal" class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
         <h2>🎁 Ежедневный бонус</h2>
-        <p id="bonusStatus"></p>
-        <button onclick="claimDailyBonus()">Получить</button>
+        <p id="streakCounter">Серия: 0 дней</p>
+        <button onclick="claimDailyBonus()">Получить бонус</button>
     </div>
 
     <div id="achievementsModal" class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
         <h2>🏆 Достижения</h2>
-        <ul id="achievementsList"></ul>
+        <div id="achievementsList"></div>
     </div>
 
-    <div class="modal-overlay" onclick="closeModal()"></div>
+    <audio id="tapSound" src="tap.wav"></audio>
+    <audio id="buySound" src="buy.wav"></audio>
+    <audio id="achievementSound" src="achievement.wav"></audio>
 
     <script>
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for(let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(star);
+            }
+        }
+
         let gameData = {
-    balance: 0,
-    lastDaily: null,
-    dailyStreak: 0,
-    upgrades: {
-        smart_tap: false
-    },
-    achievements: {
-        total: 0,
-        earned: { // Добавьте эту инициализацию
-            100: false,
-            500: false, 
-            1000: false
-        }
-    }
-};
-
-        // Инициализация
-        function init() {
-            loadData();
-            setupEventListeners();
-            checkDailyBonus();
-            updateShopButton();
-            updateBalanceDisplay();
-            updateAchievements();
-        }
-
-        // Загрузка данных
-        function loadData() {
-    const saved = localStorage.getItem('tapGameData');
-    if(saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            gameData = {
-                ...gameData,
-                ...parsed,
-                lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
-                achievements: {
-                    total: parsed.achievements?.total || 0, // Добавлено здесь
-                    earned: {
-                        ...gameData.achievements.earned,
-                        ...parsed.achievements?.earned
-                    }
+            balance: 0,
+            lastDaily: null,
+            dailyStreak: 0,
+            upgrades: {
+                smart_tap: false,
+                x2_tap: false
+            },
+            achievements: {
+                total: 0,
+                earned: {
+                    100: false,
+                    500: false,
+                    1000: false,
+                    5000: false
                 }
-            };
-        } catch(e) {
-            console.error('Ошибка загрузки данных:', e);
-        }
-    }
-}
+            },
+            multiplier: 1
+        };
 
-        // Сохранение данных
-        function saveData() {
-            localStorage.setItem('tapGameData', JSON.stringify(gameData));
-        }
-
-        // Обработчики событий
-        function setupEventListeners() {
-            const tapBtn = document.getElementById('tapButton');
-            tapBtn.addEventListener('click', handleTap);
-            tapBtn.addEventListener('touchstart', handleTap);
-
-            document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
-            document.getElementById('dailyBtn').addEventListener('click', () => showModal('dailyModal'));
-            document.getElementById('achieveBtn').addEventListener('click', () => {
-                updateAchievements();
-                showModal('achievementsModal');
-            });
-        }
-
-        // Обработка тапов
         function handleTap(e) {
-            const multiplier = gameData.upgrades.smart_tap ? 2 : 1;
-            addCoins(multiplier);
+            document.getElementById('tapSound').play();
+            
+            const baseValue = 1;
+            let multiplier = gameData.multiplier;
+            
+            addCoins(baseValue * multiplier);
             
             const rect = e.target.getBoundingClientRect();
-            const x = rect.left + rect.width/2;
-            const y = rect.top + rect.height/2;
-            generateCoins(x, y, 10);
+            generateCoins(rect.left + rect.width/2, rect.top + rect.height/2, 10);
         }
 
-        // Генерация монет
         function generateCoins(x, y, count) {
             const wallet = document.getElementById('wallet').getBoundingClientRect();
             
@@ -325,130 +404,150 @@
             }
         }
 
-        // Добавление монет
-       function addCoins(amount) {
-    const finalAmount = gameData.upgrades.smart_tap ? amount * 2 : amount;
-    gameData.balance += finalAmount;
-    gameData.achievements.total += finalAmount; // Важное изменение здесь
-    updateBalanceDisplay();
-    checkAchievements();
-    saveData();
-         }
-
-        // Обновление баланса
-        function updateBalanceDisplay() {
-            const balanceElement = document.getElementById('balance');
-            if(balanceElement) {
-                balanceElement.textContent = gameData.balance;
-                balanceElement.parentElement.classList.add('wallet-bounce');
-                setTimeout(() => {
-                    balanceElement.parentElement.classList.remove('wallet-bounce');
-                }, 500);
-            }
-        }
-
-        // Ежедневный бонус
-        function checkDailyBonus() {
-            const today = new Date();
-            today.setHours(0,0,0,0);
+        function addCoins(amount) {
+            gameData.balance += amount;
+            gameData.achievements.total += amount;
             
-            if(gameData.lastDaily) {
-                const lastDate = new Date(gameData.lastDaily);
-                const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
-                
-                if(diffDays === 0) return;
-                
-                if(diffDays === 1) {
-                    gameData.dailyStreak = Math.min(gameData.dailyStreak + 1, 6);
-                } else {
-                    gameData.dailyStreak = 0;
-                }
-            }
-            
-            gameData.lastDaily = today;
+            updateBalanceDisplay();
+            checkAchievements();
             saveData();
         }
 
-        // Покупка улучшений
+        const upgrades = {
+            smart_tap: { price: 50 },
+            x2_tap: { price: 1000 }
+        };
+
         function buyUpgrade(type) {
-            if(type === 'smart_tap') {
-                if(gameData.balance >= 50 && !gameData.upgrades.smart_tap) {
-                    gameData.balance -= 50;
-                    gameData.upgrades.smart_tap = true;
-                    updateBalanceDisplay();
-                    updateShopButton();
-                    saveData();
-                    alert('Умный тап активирован! Теперь вы получаете x2 монеты!');
-                } else if(gameData.upgrades.smart_tap) {
-                    alert('Это улучшение уже куплено!');
-                } else {
-                    alert(`Недостаточно монет! Нужно еще ${50 - gameData.balance} монет.`);
-                }
+            const upgrade = upgrades[type];
+            
+            if(gameData.balance >= upgrade.price && !gameData.upgrades[type]) {
+                document.getElementById('buySound').play();
+                gameData.balance -= upgrade.price;
+                gameData.upgrades[type] = true;
+                updateMultiplier();
+                updateBalanceDisplay();
+                updateShopButtons();
+                saveData();
+                return true;
             }
+            return false;
         }
 
-        // Обновление кнопки магазина
-        function updateShopButton() {
-            const btn = document.getElementById('buySmartTap');
-            if(btn) {
-                if(gameData.upgrades.smart_tap) {
-                    btn.disabled = true;
-                    btn.textContent = '✓ Куплено';
-                    btn.style.background = '#666';
-                } else {
-                    btn.textContent = `Купить (${50 - gameData.balance} осталось)`;
-                    btn.style.background = gameData.balance >= 50 ? '#4CAF50' : '#666';
-                }
-            }
+        function updateMultiplier() {
+            let multiplier = 1;
+            if(gameData.upgrades.smart_tap) multiplier *= 2;
+            if(gameData.upgrades.x2_tap) multiplier *= 2;
+            gameData.multiplier = multiplier;
         }
 
-        // Достижения
         function checkAchievements() {
-            const milestones = [100, 500, 1000];
+            const milestones = [100, 500, 1000, 5000];
             let newAchievements = false;
             
             milestones.forEach(amount => {
-                if(gameData.achievements.total >= amount && !gameData.achievements.earned[amount]) {
+                if(gameData.achievements.total >= amount && 
+                   !gameData.achievements.earned[amount]) {
                     gameData.achievements.earned[amount] = true;
                     newAchievements = true;
+                    showAchievementNotification(amount);
                 }
             });
 
             if(newAchievements) {
-                updateAchievements();
+                document.getElementById('achievementSound').play();
+                updateAchievementsDisplay();
                 saveData();
             }
         }
 
-        function updateAchievements() {
-    const list = document.getElementById('achievementsList');
-    if(list) {
-        list.innerHTML = `
-            <li style="margin-bottom: 15px; color: #ffd700;">Всего заработано: ${gameData.achievements.total} монет</li>
-            ${Object.entries(gameData.achievements.earned)
-                .sort((a, b) => a[0] - b[0])
-                .map(([amount, earned]) => `
-                    <li style="margin: 8px 0; display: flex; justify-content: space-between;">
-                        <span>${amount} монет:</span>
-                        <span>${earned ? '✅ Открыто' : '🔒 Закрыто'}</span>
-                    </li>
-                `).join('')}
-        `;
-    }
-}
+        function showAchievementNotification(amount) {
+            const notification = document.createElement('div');
+            notification.className = 'achievement-notification';
+            notification.innerHTML = `🏆 Достижение! ${amount} монет!`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
 
-        // Модальные окна
+        function saveData() {
+            localStorage.setItem('gameData', JSON.stringify(gameData));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('gameData');
+            if(saved) {
+                gameData = JSON.parse(saved);
+                updateMultiplier();
+                updateShopButtons();
+                updateBalanceDisplay();
+                updateAchievementsDisplay();
+            }
+        }
+
+        function updateBalanceDisplay() {
+            const balance = gameData.balance;
+            document.getElementById('balance').textContent = balance;
+            document.getElementById('bottomBalance').textContent = balance;
+        }
+
+        function updateShopButtons() {
+            const updateButton = (id, type) => {
+                const btn = document.getElementById(id);
+                if(gameData.upgrades[type]) {
+                    btn.disabled = true;
+                    btn.textContent = '✓ Куплено';
+                    btn.style.background = '#666';
+                } else {
+                    btn.textContent = `Купить (${upgrades[type].price})`;
+                    btn.style.background = gameData.balance >= upgrades[type].price 
+                        ? '#4CAF50' 
+                        : '#666';
+                }
+            };
+            
+            updateButton('buySmartTap', 'smart_tap');
+            updateButton('buyX2Tap', 'x2_tap');
+        }
+
+        function updateAchievementsDisplay() {
+            const list = document.getElementById('achievementsList');
+            list.innerHTML = `
+                <div style="margin-bottom: 15px; color: #ffd700;">Всего заработано: ${gameData.achievements.total} монет</div>
+                ${Object.entries(gameData.achievements.earned)
+                    .map(([amount, earned]) => `
+                        <div class="achievement-item" style="margin: 8px 0; display: flex; justify-content: space-between;">
+                            <span>${amount} монет:</span>
+                            <span>${earned ? '✅ Открыто' : '🔒 Закрыто'}</span>
+                        </div>
+                    `).join('')}
+            `;
+        }
+
         function showModal(id) {
-            document.querySelector('.modal-overlay').style.display = 'block';
             document.getElementById(id).style.display = 'block';
         }
 
         function closeModal() {
-            document.querySelector('.modal-overlay').style.display = 'none';
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         }
 
-        // Запуск
+        function setupEventListeners() {
+            document.getElementById('tapButton').addEventListener('click', handleTap);
+            document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
+            document.getElementById('dailyBtn').addEventListener('click', () => showModal('dailyModal'));
+            document.getElementById('achieveBtn').addEventListener('click', () => {
+                updateAchievementsDisplay();
+                showModal('achievementsModal');
+            });
+        }
+
+        function init() {
+            createStars();
+            setupEventListeners();
+            loadData();
+        }
+
         window.onload = init;
     </script>
 </body>
