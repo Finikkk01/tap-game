@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тапалка с монетами</title>
+    <title>Тапалка с уровнями и бонусами</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -38,7 +38,7 @@
             color: #333;
             margin-top: 20px;
             position: fixed;
-            bottom: 20px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.8);
@@ -59,12 +59,65 @@
             0% { top: -50px; transform: rotate(0deg); }
             100% { top: 100vh; transform: rotate(360deg); }
         }
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .controls button:active {
+            transform: scale(0.95);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        .modal h2 {
+            margin-top: 0;
+        }
+        .modal button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Тапалка с монетами</h1>
+    <h1>Тапалка с уровнями и бонусами</h1>
     <button id="tapButton">ТАП!</button>
     <div id="score">Монет: 0</div>
+
+    <!-- Кнопки управления -->
+    <div class="controls">
+        <button id="levelButton">Уровень: Легкий</button>
+        <button id="boosterButton">Бустер x2</button>
+        <button id="leaderboardButton">Рейтинг</button>
+    </div>
+
+    <!-- Модальное окно для рейтинга -->
+    <div id="leaderboardModal" class="modal">
+        <h2>Рейтинговая таблица</h2>
+        <ul id="leaderboardList"></ul>
+        <button onclick="closeModal()">Закрыть</button>
+    </div>
 
     <!-- Звук -->
     <audio id="tapSound" src="tap.mp3"></audio>
@@ -74,14 +127,22 @@
         Telegram.WebApp.ready();
 
         let score = 0;
+        let level = 1; // Уровень сложности (1 - легкий, 2 - средний, 3 - сложный)
+        let booster = 1; // Множитель очков
+        const leaderboard = []; // Рейтинговая таблица
+
         const tapButton = document.getElementById('tapButton');
         const scoreDisplay = document.getElementById('score');
         const tapSound = document.getElementById('tapSound');
+        const levelButton = document.getElementById('levelButton');
+        const boosterButton = document.getElementById('boosterButton');
+        const leaderboardButton = document.getElementById('leaderboardButton');
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const leaderboardList = document.getElementById('leaderboardList');
 
-        // Обработчик нажатия на кнопку
+        // Обработчик нажатия на кнопку "ТАП!"
         tapButton.addEventListener('click', (event) => {
-            // Увеличиваем счет
-            score++;
+            score += booster; // Увеличиваем счет с учетом бустера
             scoreDisplay.textContent = `Монет: ${score}`;
 
             // Воспроизведение звука
@@ -94,19 +155,73 @@
             createCoins(event.clientX, event.clientY);
         });
 
+        // Обработчик изменения уровня сложности
+        levelButton.addEventListener('click', () => {
+            level = (level % 3) + 1; // Переключаем уровень (1 -> 2 -> 3 -> 1)
+            levelButton.textContent = `Уровень: ${getLevelName(level)}`;
+        });
+
+        // Обработчик активации бустера
+        boosterButton.addEventListener('click', () => {
+            if (score >= 50) { // Бустер стоит 50 монет
+                score -= 50;
+                booster = 2; // Активируем бустер x2
+                setTimeout(() => {
+                    booster = 1; // Деактивируем бустер через 10 секунд
+                    boosterButton.textContent = "Бустер x2";
+                }, 10000); // 10 секунд
+                boosterButton.textContent = "Бустер активен!";
+                scoreDisplay.textContent = `Монет: ${score}`;
+            } else {
+                alert("Недостаточно монет для бустера!");
+            }
+        });
+
+        // Обработчик открытия рейтинга
+        leaderboardButton.addEventListener('click', () => {
+            updateLeaderboard();
+            leaderboardModal.style.display = 'block';
+        });
+
         // Функция для создания падающих монет
         function createCoins(x, y) {
-            for (let i = 0; i < 5; i++) { // Создаем 5 монет
+            const coinCount = level * 5; // Количество монет зависит от уровня
+            for (let i = 0; i < coinCount; i++) {
                 const coin = document.createElement('div');
                 coin.className = 'coin';
                 coin.style.left = `${x + Math.random() * 50 - 25}px`; // Случайное смещение по X
-                coin.style.animationDuration = `${Math.random() * 1 + 1}s`; // Случайная скорость падения
+                coin.style.animationDuration = `${Math.random() * 1 + level}s`; // Скорость падения зависит от уровня
                 document.body.appendChild(coin);
 
                 // Удаляем монету после завершения анимации
                 coin.addEventListener('animationend', () => {
                     coin.remove();
                 });
+            }
+        }
+
+        // Функция для обновления рейтинга
+        function updateLeaderboard() {
+            leaderboardList.innerHTML = '';
+            leaderboard.sort((a, b) => b.score - a.score).forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${entry.name}: ${entry.score}`;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        // Функция для закрытия модального окна
+        function closeModal() {
+            leaderboardModal.style.display = 'none';
+        }
+
+        // Функция для получения названия уровня
+        function getLevelName(level) {
+            switch (level) {
+                case 1: return "Легкий";
+                case 2: return "Средний";
+                case 3: return "Сложный";
+                default: return "Легкий";
             }
         }
 
