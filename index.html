@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Turbo Тапалка PRO</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Основные стили */
         body {
             margin: 0;
             padding: 80px 20px 120px;
@@ -17,7 +15,6 @@
             overflow-x: hidden;
         }
 
-        /* Контейнер для кнопки тапа */
         .tap-container {
             position: fixed;
             top: 50%;
@@ -27,7 +24,6 @@
             touch-action: manipulation;
         }
 
-        /* Кнопка тапа */
         #tapButton {
             width: 120px;
             height: 120px;
@@ -40,66 +36,21 @@
             cursor: pointer;
             transition: transform 0.1s;
             touch-action: none;
-            will-change: transform;
         }
 
-        /* Анимация кнопки */
         #tapButton:active {
             transform: scale(1.1);
         }
 
-        /* Монеты */
         .coin {
             position: fixed;
             width: 24px;
             height: 24px;
             background: url('coin.png') center/contain no-repeat;
             pointer-events: none;
-            will-change: transform;
             z-index: 999;
         }
 
-        /* Панель управления */
-        .control-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 25px;
-            backdrop-filter: blur(5px);
-            width: 90%;
-            max-width: 600px;
-            justify-content: center;
-        }
-
-        /* Кнопки управления */
-        .control-btn {
-            padding: 12px 20px;
-            border-radius: 15px;
-            background: linear-gradient(45deg, #2a2a72, #009ffd);
-            border: none;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            min-width: 120px;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        /* Кошелек */
         #wallet {
             position: fixed;
             top: 20px;
@@ -111,12 +62,9 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: transform 0.3s;
-            z-index: 1001;
             backdrop-filter: blur(5px);
         }
 
-        /* Кнопка вывода */
         #withdrawBtn {
             padding: 8px 15px;
             border-radius: 15px;
@@ -125,11 +73,36 @@
             color: white;
             cursor: not-allowed;
             opacity: 0.7;
-            transition: opacity 0.3s;
-            font-size: 12px;
         }
 
-        /* Модальные окна */
+        .control-panel {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            max-width: 95%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            border-radius: 12px;
+            background: linear-gradient(45deg, #2a2a72, #009ffd);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            flex: 1 1 auto;
+            text-align: center;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -141,7 +114,6 @@
             border-radius: 20px;
             width: 90%;
             max-width: 500px;
-            z-index: 2000;
             backdrop-filter: blur(10px);
         }
 
@@ -155,42 +127,54 @@
             font-size: 24px;
             cursor: pointer;
         }
+
+        .shop-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .buy-btn {
+            padding: 8px 20px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .control-btn {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            
+            #wallet {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Основная кнопка -->
     <div class="tap-container">
         <button id="tapButton">ТАП!</button>
     </div>
 
-    <!-- Кошелек -->
     <div id="wallet">
         <span>💰</span>
         <span id="balance">0</span>
         <button id="withdrawBtn">В процессе</button>
     </div>
 
-    <!-- Панель управления -->
     <div class="control-panel">
-        <button class="control-btn" id="shopBtn">
-            <span>🛒</span>
-            Магазин
-        </button>
-        <button class="control-btn" id="dailyBtn">
-            <span>🎁</span>
-            Бонус
-        </button>
-        <button class="control-btn" id="achieveBtn">
-            <span>🏆</span>
-            Достижения
-        </button>
-        <button class="control-btn" id="settingsBtn">
-            <span>⚙️</span>
-            Настройки
-        </button>
+        <button class="control-btn" id="shopBtn">🛒 Магазин</button>
+        <button class="control-btn" id="dailyBtn">🎁 Бонус</button>
+        <button class="control-btn" id="achieveBtn">🏆 Достижения</button>
+        <button class="control-btn" id="settingsBtn">⚙️ Настройки</button>
     </div>
 
-    <!-- Модальные окна -->
     <div id="shopModal" class="modal">
         <button class="modal-close" onclick="closeModal('shopModal')">×</button>
         <h2>🛒 Магазин улучшений</h2>
@@ -214,7 +198,6 @@
     </div>
 
     <script>
-        // Система данных
         let gameData = {
             balance: 0,
             lastDaily: null,
@@ -228,33 +211,28 @@
             }
         };
 
-        // Инициализация
         function init() {
             loadData();
             setupEventListeners();
             checkDailyBonus();
+            updateShopButtons();
         }
 
-        // Загрузка данных
         function loadData() {
             const saved = localStorage.getItem('tapGameData');
             if(saved) gameData = JSON.parse(saved);
             updateBalance();
         }
 
-        // Сохранение данных
         function saveData() {
             localStorage.setItem('tapGameData', JSON.stringify(gameData));
         }
 
-        // Обработчики событий
         function setupEventListeners() {
-            // Основная кнопка
             const tapBtn = document.getElementById('tapButton');
             tapBtn.addEventListener('click', handleTap);
             tapBtn.addEventListener('touchstart', handleTap);
 
-            // Панель управления
             document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
             document.getElementById('dailyBtn').addEventListener('click', () => showModal('dailyModal'));
             document.getElementById('achieveBtn').addEventListener('click', () => {
@@ -263,31 +241,15 @@
             });
         }
 
-        // Обработка тапов
         function handleTap(e) {
             const rect = e.target.getBoundingClientRect();
             const x = rect.left + rect.width/2;
             const y = rect.top + rect.height/2;
             
             generateCoins(x, y, 10);
-            addCoins(1);
+            addCoins(gameData.upgrades.smart_tap ? 2 : 1);
         }
 
-        // Добавление монет
-        function addCoins(amount) {
-            gameData.balance += amount;
-            gameData.achievements.total += amount;
-            updateBalance();
-            checkAchievements();
-        }
-
-        // Обновление баланса
-        function updateBalance() {
-            document.getElementById('balance').textContent = gameData.balance;
-            saveData();
-        }
-
-        // Генерация монет
         function generateCoins(x, y, count) {
             const wallet = document.getElementById('wallet').getBoundingClientRect();
             
@@ -312,7 +274,18 @@
             }
         }
 
-        // Ежедневные бонусы
+        function addCoins(amount) {
+            gameData.balance += amount;
+            gameData.achievements.total += amount;
+            updateBalance();
+            checkAchievements();
+            saveData();
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = gameData.balance;
+        }
+
         function checkDailyBonus() {
             const today = new Date().toDateString();
             if(gameData.lastDaily === today) return;
@@ -330,20 +303,34 @@
 
         function isConsecutiveDay(lastDate) {
             const diff = Date.now() - lastDate;
-            return diff <= 86400000 * 1.5; // 1.5 дня для допуска
+            return diff <= 86400000 * 1.5;
         }
 
-        // Магазин
         function buyUpgrade(type) {
-            if(type === 'smart_tap' && gameData.balance >= 50) {
-                gameData.balance -= 50;
-                gameData.upgrades.smart_tap = true;
-                updateBalance();
-                alert('Умный тап активирован!');
+            if(type === 'smart_tap') {
+                if(gameData.balance >= 50 && !gameData.upgrades.smart_tap) {
+                    gameData.balance -= 50;
+                    gameData.upgrades.smart_tap = true;
+                    updateBalance();
+                    updateShopButtons();
+                    saveData();
+                    alert('Умный тап активирован!');
+                } else if(gameData.upgrades.smart_tap) {
+                    alert('Уже куплено!');
+                } else {
+                    alert('Недостаточно монет!');
+                }
             }
         }
 
-        // Достижения
+        function updateShopButtons() {
+            const btn = document.querySelector('.buy-btn');
+            if(gameData.upgrades.smart_tap) {
+                btn.disabled = true;
+                btn.textContent = 'Куплено';
+            }
+        }
+
         function checkAchievements() {
             const milestones = [100, 500, 1000];
             milestones.forEach(amount => {
@@ -352,6 +339,7 @@
                     alert(`Достижение: ${amount} монет!`);
                 }
             });
+            saveData();
         }
 
         function updateAchievements() {
@@ -362,7 +350,6 @@
                 `).join('');
         }
 
-        // Управление модальными окнами
         function showModal(id) {
             document.getElementById(id).style.display = 'block';
         }
@@ -371,7 +358,6 @@
             document.getElementById(id).style.display = 'none';
         }
 
-        // Запуск
         window.onload = init;
     </script>
 </body>
