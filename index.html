@@ -220,21 +220,21 @@
 
     <script>
         let gameData = {
-            balance: 0,
-            lastDaily: null,
-            dailyStreak: 0,
-            upgrades: {
-                smart_tap: false
-            },
-            achievements: {
-                total: 0,
-                earned: {
-                    100: false,
-                    500: false,
-                    1000: false
-                }
-            }
-        };
+    balance: 0,
+    lastDaily: null,
+    dailyStreak: 0,
+    upgrades: {
+        smart_tap: false
+    },
+    achievements: {
+        total: 0,
+        earned: { // Добавьте эту инициализацию
+            100: false,
+            500: false, 
+            1000: false
+        }
+    }
+};
 
         // Инициализация
         function init() {
@@ -248,24 +248,27 @@
 
         // Загрузка данных
         function loadData() {
-            const saved = localStorage.getItem('tapGameData');
-            if(saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    gameData = {
-                        ...gameData,
-                        ...parsed,
-                        lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
-                        achievements: {
-                            ...gameData.achievements,
-                            ...parsed.achievements
-                        }
-                    };
-                } catch(e) {
-                    console.error('Ошибка загрузки данных:', e);
+    const saved = localStorage.getItem('tapGameData');
+    if(saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            gameData = {
+                ...gameData,
+                ...parsed,
+                lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
+                achievements: {
+                    total: parsed.achievements?.total || 0, // Добавлено здесь
+                    earned: {
+                        ...gameData.achievements.earned,
+                        ...parsed.achievements?.earned
+                    }
                 }
-            }
+            };
+        } catch(e) {
+            console.error('Ошибка загрузки данных:', e);
         }
+    }
+}
 
         // Сохранение данных
         function saveData() {
@@ -323,13 +326,14 @@
         }
 
         // Добавление монет
-        function addCoins(amount) {
-            gameData.balance += amount;
-            gameData.achievements.total += amount;
-            updateBalanceDisplay();
-            checkAchievements();
-            saveData();
-        }
+       function addCoins(amount) {
+    const finalAmount = gameData.upgrades.smart_tap ? amount * 2 : amount;
+    gameData.balance += finalAmount;
+    gameData.achievements.total += finalAmount; // Важное изменение здесь
+    updateBalanceDisplay();
+    checkAchievements();
+    saveData();
+         }
 
         // Обновление баланса
         function updateBalanceDisplay() {
@@ -417,15 +421,21 @@
         }
 
         function updateAchievements() {
-            const list = document.getElementById('achievementsList');
-            if(list) {
-                list.innerHTML = Object.entries(gameData.achievements.earned)
-                    .sort((a, b) => a[0] - b[0])
-                    .map(([amount, earned]) => `
-                        <li>${amount} монет: ${earned ? '✅' : '❌'}</li>
-                    `).join('');
-            }
-        }
+    const list = document.getElementById('achievementsList');
+    if(list) {
+        list.innerHTML = `
+            <li style="margin-bottom: 15px; color: #ffd700;">Всего заработано: ${gameData.achievements.total} монет</li>
+            ${Object.entries(gameData.achievements.earned)
+                .sort((a, b) => a[0] - b[0])
+                .map(([amount, earned]) => `
+                    <li style="margin: 8px 0; display: flex; justify-content: space-between;">
+                        <span>${amount} монет:</span>
+                        <span>${earned ? '✅ Открыто' : '🔒 Закрыто'}</span>
+                    </li>
+                `).join('')}
+        `;
+    }
+}
 
         // Модальные окна
         function showModal(id) {
