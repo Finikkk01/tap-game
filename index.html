@@ -97,7 +97,7 @@
     </style>
 </head>
 <body>
-    <button id="tapButton">ТАП!</button>
+    <button id="tapButton"></button>
     
     <div id="wallet">
         <span>💰</span>
@@ -125,7 +125,7 @@
             }, 100);
 
             // Создание монет
-            for(let i = 0; i < 10; i++) {
+            for(let i = 0; i < 20; i++) {
                 createCoin(e.clientX, e.clientY);
             }
 
@@ -143,8 +143,8 @@
             coin.style.top = `${y}px`;
             
             // Анимация движения
-            const targetX = wallet.offsetLeft + 30;
-            const targetY = wallet.offsetTop + 15;
+            const targetX = wallet.offsetLeft + 60;
+            const targetY = wallet.offsetTop + 30;
             
             const dx = targetX - x;
             const dy = targetY - y;
