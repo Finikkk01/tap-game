@@ -103,7 +103,7 @@
 <body>
     <h1>FiN CoiN</h1>
     <button id="tapButton">!Тыдыщ!</button>
-    <div id="score">Coins: 0</div>
+    <div id="score">Монет: 0</div>
 
     <!-- Кнопки управления -->
     <div class="controls">
@@ -189,7 +189,7 @@
             for (let i = 0; i < coinCount; i++) {
                 const coin = document.createElement('div');
                 coin.className = 'coin';
-                coin.style.left = `${x + Math.random() * 200 - 200}px`; // Случайное смещение по X
+                coin.style.left = `${x + Math.random() * 300 - 300}px`; // Случайное смещение по X
                 coin.style.animationDuration = `${Math.random() * 1 + level}s`; // Скорость падения зависит от уровня
                 document.body.appendChild(coin);
 
