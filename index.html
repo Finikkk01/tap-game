@@ -3,192 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тапалка с кошельком</title>
+    <title>Turbo Тапалка</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #f0f0f0, #d1e8ff);
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            height: 100vh;
             overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
         }
-        h1 {
-            color: #333;
-            margin-top: 20px;
-        }
+
         #tapButton {
-            padding: 30px 60px;
-            font-size: 28px;
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            color: blue;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            transition: transform 0.1s, box-shadow 0.1s;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 65% 15%, #ffd700, #ff8c00);
+            border: none;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5),
+                        inset 0 -5px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.1s;
+            font-size: 24px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
+
         #tapButton:active {
             transform: translate(-50%, -50%) scale(1.1);
-            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.8),
+                        inset 0 -2px 10px rgba(0,0,0,0.2);
         }
-        #wallet {
-            font-size: 24px;
-            color: #333;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            cursor: pointer;
-        }
+
         .coin {
             position: absolute;
             width: 20px;
             height: 20px;
-            background: url('coin.png') no-repeat center center;
-            background-size: cover;
-            animation: fall linear;
-            z-index: 1;
+            background: url('coin.png') center/contain no-repeat;
+            pointer-events: none;
         }
-        @keyframes fall {
-            0% { top: -50px; transform: rotate(0deg); }
-            100% { top: 100vh; transform: rotate(360deg); }
+
+        #wallet {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.3s;
         }
+
+        #wallet:hover {
+            transform: scale(1.05);
+        }
+
         .controls {
             position: fixed;
             bottom: 20px;
             right: 20px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
-        .controls button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
+
+        .control-btn {
+            padding: 12px 25px;
+            border-radius: 25px;
             border: none;
-            border-radius: 10px;
+            background: linear-gradient(45deg, #2a2a72, #009ffd);
+            color: white;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .controls button:active {
-            transform: scale(0.95);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
+
         .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-        }
-        .modal h2 {
-            margin-top: 0;
-        }
-        .modal button {
-            margin-top: 10px;
+            /* Стили для модальных окон */
         }
     </style>
 </head>
 <body>
-    <h1>Тапалка с кошельком</h1>
     <button id="tapButton">ТАП!</button>
-    <div id="wallet" title="Нажмите, чтобы увидеть счет">💰 0</div>
+    
+    <div id="wallet">
+        <span>💰</span>
+        <span id="balance">0</span>
+    </div>
 
-    <!-- Кнопки управления -->
     <div class="controls">
-        <button id="leaderboardButton">Рейтинг</button>
+        <button class="control-btn" id="boostBtn">🚀 Бустер</button>
+        <button class="control-btn" id="difficultyBtn">⚙️ Сложность</button>
+        <button class="control-btn" id="questsBtn">🎯 Задания</button>
+        <button class="control-btn" id="leaderboardBtn">🏆 Топ</button>
     </div>
-
-    <!-- Модальное окно для рейтинга -->
-    <div id="leaderboardModal" class="modal">
-        <h2>Рейтинговая таблица</h2>
-        <ul id="leaderboardList"></ul>
-        <button onclick="closeModal()">Закрыть</button>
-    </div>
-
-    <!-- Звук -->
-    <audio id="tapSound" src="tap.mp3"></audio>
 
     <script>
-        // Инициализация Telegram Web App
-        Telegram.WebApp.ready();
-
-        let score = 0;
-        const tapButton = document.getElementById('tapButton');
+        let coins = 0;
+        const tapBtn = document.getElementById('tapButton');
         const wallet = document.getElementById('wallet');
-        const tapSound = document.getElementById('tapSound');
-        const leaderboardButton = document.getElementById('leaderboardButton');
-        const leaderboardModal = document.getElementById('leaderboardModal');
-        const leaderboardList = document.getElementById('leaderboardList');
+        const balance = document.getElementById('balance');
 
-        // Обработчик нажатия на кнопку "ТАП!"
-        tapButton.addEventListener('click', (event) => {
-            score++; // Увеличиваем счет
-            wallet.textContent = `💰 ${score}`;
+        tapBtn.addEventListener('click', (e) => {
+            // Анимация кнопки
+            tapBtn.style.transform = `translate(-50%, -50%) scale(1.1)`;
+            setTimeout(() => {
+                tapBtn.style.transform = `translate(-50%, -50%) scale(1)`;
+            }, 100);
 
-            // Воспроизведение звука
-            if (tapSound) {
-                tapSound.currentTime = 0;
-                tapSound.play().catch(err => console.log("Ошибка звука:", err));
+            // Создание монет
+            for(let i = 0; i < 10; i++) {
+                createCoin(e.clientX, e.clientY);
             }
 
-            // Создаем падающие монеты
-            createCoins(event.clientX, event.clientY);
+            // Обновление баланса
+            coins += 1;
+            balance.textContent = coins;
         });
 
-        // Обработчик открытия рейтинга
-        leaderboardButton.addEventListener('click', () => {
-            updateLeaderboard();
-            leaderboardModal.style.display = 'block';
-        });
-
-        // Функция для создания падающих монет
-        function createCoins(x, y) {
-            for (let i = 0; i < 5; i++) { // Создаем 5 монет
-                const coin = document.createElement('div');
-                coin.className = 'coin';
-                coin.style.left = `${x + Math.random() * 100 - 50}px`; // Случайное смещение по X
-                coin.style.animationDuration = `${Math.random() * 1 + 1}s`; // Случайная скорость падения
-                document.body.appendChild(coin);
-
-                // Удаляем монету после завершения анимации
-                coin.addEventListener('animationend', () => {
+        function createCoin(x, y) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            
+            // Начальная позиция
+            coin.style.left = `${x}px`;
+            coin.style.top = `${y}px`;
+            
+            // Анимация движения
+            const targetX = wallet.offsetLeft + 30;
+            const targetY = wallet.offsetTop + 15;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            
+            let progress = 0;
+            const duration = 1000;
+            
+            function animate() {
+                progress += 16.7; // ~60fps
+                const t = progress / duration;
+                
+                coin.style.left = `${x + dx * t}px`;
+                coin.style.top = `${y + dy * t * (2 - t)}px`; // Параболическая траектория
+                
+                if(progress < duration) {
+                    requestAnimationFrame(animate);
+                } else {
                     coin.remove();
-                });
+                }
             }
+            
+            requestAnimationFrame(animate);
+            document.body.appendChild(coin);
         }
-
-        // Функция для обновления рейтинга
-        function updateLeaderboard() {
-            leaderboardList.innerHTML = '';
-            leaderboard.sort((a, b) => b.score - a.score).forEach((entry, index) => {
-                const li = document.createElement('li');
-                li.textContent = `${index + 1}. ${entry.name}: ${entry.score}`;
-                leaderboardList.appendChild(li);
-            });
-        }
-
-        // Функция для закрытия модального окна
-        function closeModal() {
-            leaderboardModal.style.display = 'none';
-        }
-
-        console.log("Mini App инициализирован!");
     </script>
 </body>
 </html>
