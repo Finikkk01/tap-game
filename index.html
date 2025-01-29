@@ -228,27 +228,51 @@
             },
             achievements: {
                 total: 0,
-                earned: {}
+                earned: {
+                    100: false,
+                    500: false,
+                    1000: false
+                }
             }
         };
 
+        // Инициализация
         function init() {
             loadData();
             setupEventListeners();
             checkDailyBonus();
             updateShopButton();
+            updateBalanceDisplay();
+            updateAchievements();
         }
 
+        // Загрузка данных
         function loadData() {
             const saved = localStorage.getItem('tapGameData');
-            if(saved) gameData = JSON.parse(saved);
-            updateBalance();
+            if(saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    gameData = {
+                        ...gameData,
+                        ...parsed,
+                        lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
+                        achievements: {
+                            ...gameData.achievements,
+                            ...parsed.achievements
+                        }
+                    };
+                } catch(e) {
+                    console.error('Ошибка загрузки данных:', e);
+                }
+            }
         }
 
+        // Сохранение данных
         function saveData() {
             localStorage.setItem('tapGameData', JSON.stringify(gameData));
         }
 
+        // Обработчики событий
         function setupEventListeners() {
             const tapBtn = document.getElementById('tapButton');
             tapBtn.addEventListener('click', handleTap);
@@ -262,15 +286,18 @@
             });
         }
 
+        // Обработка тапов
         function handleTap(e) {
+            const multiplier = gameData.upgrades.smart_tap ? 2 : 1;
+            addCoins(multiplier);
+            
             const rect = e.target.getBoundingClientRect();
             const x = rect.left + rect.width/2;
             const y = rect.top + rect.height/2;
-            
             generateCoins(x, y, 10);
-            addCoins(gameData.upgrades.smart_tap ? 2 : 1);
         }
 
+        // Генерация монет
         function generateCoins(x, y, count) {
             const wallet = document.getElementById('wallet').getBoundingClientRect();
             
@@ -295,85 +322,112 @@
             }
         }
 
+        // Добавление монет
         function addCoins(amount) {
             gameData.balance += amount;
             gameData.achievements.total += amount;
-            updateBalance();
+            updateBalanceDisplay();
             checkAchievements();
             saveData();
         }
 
-        function updateBalance() {
-            document.getElementById('balance').textContent = gameData.balance;
+        // Обновление баланса
+        function updateBalanceDisplay() {
+            const balanceElement = document.getElementById('balance');
+            if(balanceElement) {
+                balanceElement.textContent = gameData.balance;
+                balanceElement.parentElement.classList.add('wallet-bounce');
+                setTimeout(() => {
+                    balanceElement.parentElement.classList.remove('wallet-bounce');
+                }, 500);
+            }
         }
 
+        // Ежедневный бонус
         function checkDailyBonus() {
-            const today = new Date().toDateString();
-            if(gameData.lastDaily === today) return;
+            const today = new Date();
+            today.setHours(0,0,0,0);
             
-            if(gameData.lastDaily && isConsecutiveDay(new Date(gameData.lastDaily))) {
-                gameData.dailyStreak++;
-            } else {
-                gameData.dailyStreak = 0;
+            if(gameData.lastDaily) {
+                const lastDate = new Date(gameData.lastDaily);
+                const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+                
+                if(diffDays === 0) return;
+                
+                if(diffDays === 1) {
+                    gameData.dailyStreak = Math.min(gameData.dailyStreak + 1, 6);
+                } else {
+                    gameData.dailyStreak = 0;
+                }
             }
             
-            showModal('dailyModal');
             gameData.lastDaily = today;
             saveData();
         }
 
-        function isConsecutiveDay(lastDate) {
-            const diff = Date.now() - lastDate;
-            return diff <= 86400000 * 1.5;
-        }
-
+        // Покупка улучшений
         function buyUpgrade(type) {
             if(type === 'smart_tap') {
                 if(gameData.balance >= 50 && !gameData.upgrades.smart_tap) {
                     gameData.balance -= 50;
                     gameData.upgrades.smart_tap = true;
-                    updateBalance();
+                    updateBalanceDisplay();
                     updateShopButton();
                     saveData();
-                    alert('Умный тап активирован!');
+                    alert('Умный тап активирован! Теперь вы получаете x2 монеты!');
                 } else if(gameData.upgrades.smart_tap) {
-                    alert('Уже куплено!');
+                    alert('Это улучшение уже куплено!');
                 } else {
-                    alert('Недостаточно монет!');
+                    alert(`Недостаточно монет! Нужно еще ${50 - gameData.balance} монет.`);
                 }
             }
         }
 
+        // Обновление кнопки магазина
         function updateShopButton() {
             const btn = document.getElementById('buySmartTap');
-            if(gameData.upgrades.smart_tap) {
-                btn.disabled = true;
-                btn.textContent = 'Куплено';
-            } else {
-                btn.disabled = gameData.balance < 50;
-                btn.textContent = `Купить (${50 - gameData.balance} осталось)`;
+            if(btn) {
+                if(gameData.upgrades.smart_tap) {
+                    btn.disabled = true;
+                    btn.textContent = '✓ Куплено';
+                    btn.style.background = '#666';
+                } else {
+                    btn.textContent = `Купить (${50 - gameData.balance} осталось)`;
+                    btn.style.background = gameData.balance >= 50 ? '#4CAF50' : '#666';
+                }
             }
         }
 
+        // Достижения
         function checkAchievements() {
             const milestones = [100, 500, 1000];
+            let newAchievements = false;
+            
             milestones.forEach(amount => {
                 if(gameData.achievements.total >= amount && !gameData.achievements.earned[amount]) {
                     gameData.achievements.earned[amount] = true;
-                    alert(`Достижение: ${amount} монет!`);
+                    newAchievements = true;
                 }
             });
-            saveData();
+
+            if(newAchievements) {
+                updateAchievements();
+                saveData();
+            }
         }
 
         function updateAchievements() {
             const list = document.getElementById('achievementsList');
-            list.innerHTML = Object.entries(gameData.achievements.earned)
-                .map(([amount, earned]) => `
-                    <li>${amount} монет: ${earned ? '✅' : '❌'}</li>
-                `).join('');
+            if(list) {
+                list.innerHTML = Object.entries(gameData.achievements.earned)
+                    .sort((a, b) => a[0] - b[0])
+                    .map(([amount, earned]) => `
+                        <li>${amount} монет: ${earned ? '✅' : '❌'}</li>
+                    `).join('');
+            }
         }
 
+        // Модальные окна
         function showModal(id) {
             document.querySelector('.modal-overlay').style.display = 'block';
             document.getElementById(id).style.display = 'block';
@@ -384,6 +438,7 @@
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         }
 
+        // Запуск
         window.onload = init;
     </script>
 </body>
