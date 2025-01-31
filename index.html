@@ -24,9 +24,9 @@
             font-family: 'Arial', sans-serif;
             height: 100vh;
             position: relative;
+            overflow: hidden;
         }
 
-        /* Кошелёк */
         #wallet {
             position: fixed;
             top: 20px;
@@ -38,9 +38,9 @@
             align-items: center;
             gap: 10px;
             z-index: 1000;
+            cursor: pointer;
         }
 
-        /* Основная кнопка */
         #tapButton {
             position: fixed;
             top: 50%;
@@ -57,13 +57,13 @@
             cursor: pointer;
             box-shadow: 0 8px 15px rgba(255, 215, 0, 0.3);
             transition: transform 0.1s;
+            z-index: 1000;
         }
 
         #tapButton:active {
             transform: translate(-50%, -50%) scale(0.95);
         }
 
-        /* Панель управления */
         .control-panel {
             position: fixed;
             bottom: 0;
@@ -76,27 +76,48 @@
             gap: 10px;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
+            z-index: 1000;
         }
 
-        .control-btn {
-            background: #3A3C40;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--secondary);
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
             border: none;
             color: white;
-            padding: 12px;
-            border-radius: 12px;
+            font-size: 24px;
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 14px;
-            transition: 0.3s;
         }
 
-        .control-btn.active {
-            background: var(--accent);
+        .coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23FFD700" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm0-10h2v6h-2z"/></svg>');
+            animation: coinFly 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
         }
 
-        /* Колесо фортуны */
+        @keyframes coinFly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
         .wheel-container {
             position: relative;
             width: 300px;
@@ -122,9 +143,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
+            font-weight: bold;
             color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         .wheel-pointer {
@@ -139,26 +160,28 @@
             z-index: 1000;
         }
 
-        /* Модальные окна */
-        .modal {
-            display: none;
+        .wallet-menu {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 70px;
+            right: 20px;
             background: var(--secondary);
-            padding: 25px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
             z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="wallet">
-        <span>💰 <span id="balance">7106</span></span>
-        <button style="background: var(--accent); padding: 6px 12px; border-radius: 8px;">В процессе</button>
+    <div id="wallet" onclick="toggleWalletMenu()">
+        <span>💰 <span id="balance">0</span></span>
+        <div class="wallet-menu" id="walletMenu">
+            <input type="text" id="walletAddress" placeholder="Адрес кошелька">
+            <input type="number" id="withdrawAmount" placeholder="Сумма" style="margin: 10px 0;">
+            <button onclick="withdraw()" style="background: var(--accent); padding: 8px 20px; border: none; border-radius: 8px; color: white; cursor: pointer;">
+                Вывести
+            </button>
+        </div>
     </div>
 
     <button id="tapButton">ТАП!</button>
@@ -170,109 +193,188 @@
         <button class="control-btn" onclick="showModal('wheel')"><i class="fas fa-redo"></i> Колесо</button>
     </div>
 
-    <!-- Модальное окно магазина -->
+    <!-- Модальные окна -->
     <div id="shopModal" class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
         <h2>🛒 Магазин</h2>
-        <div class="shop-item">
-            <h3>Умный тап (50 монет)</h3>
-            <button onclick="buyUpgrade('smart_tap')">Купить</button>
-        </div>
+        <div id="shopItems"></div>
     </div>
 
-    <!-- Модальное окно достижений -->
-    <div id="achievementsModal" class="modal">
-        <h2>🏆 Достижения</h2>
-        <div id="achievementsList">
-            <p>Всего заработано: <span id="totalEarned">0</span> монет</p>
-            <div class="achievement-item">100 монет: ▲ Закрыто</div>
-            <div class="achievement-item">500 монет: ▲ Закрыто</div>
-            <div class="achievement-item">1000 монет: ▲ Закрыто</div>
-        </div>
-    </div>
-
-    <!-- Модальное окно колеса -->
     <div id="wheelModal" class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2>🎡 Колесо фортуны</h2>
         <div class="wheel-container">
             <div class="wheel-pointer"></div>
             <div class="wheel" id="wheel"></div>
         </div>
-        <button onclick="spinWheel()" style="margin-top: 20px; width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 12px; color: white; cursor: pointer;">
-            Крутить за 100 монет
+        <button onclick="spinWheel()" style="margin-top: 20px; background: var(--accent); padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer;">
+            Крутить (100 монет)
         </button>
     </div>
 
     <script>
-        let balance = 7106;
+        let gameData = {
+            balance: 0,
+            tapValue: 1,
+            upgrades: [],
+            achievements: { earned: {}, total: 0 },
+            lastDaily: null,
+            dailyStreak: 0
+        };
+
         const sectors = [
             { color: "#FFD700", reward: 100 },
             { color: "#4CAF50", reward: 200 },
             { color: "#2196F3", reward: 'x2' },
             { color: "#E91E63", reward: 50 },
             { color: "#9C27B0", reward: 'retry' },
-            { color: "#607D8B", reward: 0 },
-            { color: "#FF5722", reward: 150 },
-            { color: "#8BC34A", reward: 300 },
-            { color: "#795548", reward: 'jackpot' }
+            { color: "#607D8B", reward: 0 }
         ];
+
+        // Инициализация
+        function initGame() {
+            loadData();
+            initWheel();
+            initShop();
+            setupEventListeners();
+            updateBalance();
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('gameData');
+            if (saved) gameData = JSON.parse(saved);
+        }
+
+        function saveData() {
+            localStorage.setItem('gameData', JSON.stringify(gameData));
+        }
 
         function initWheel() {
             const wheel = document.getElementById('wheel');
             const angle = 360 / sectors.length;
             
             sectors.forEach((sector, index) => {
-                const sectorElement = document.createElement('div');
-                sectorElement.className = 'wheel-sector';
-                sectorElement.style.transform = `rotate(${index * angle}deg)`;
-                sectorElement.style.backgroundColor = sector.color;
-                sectorElement.textContent = sector.reward;
-                wheel.appendChild(sectorElement);
+                const sectorEl = document.createElement('div');
+                sectorEl.className = 'wheel-sector';
+                sectorEl.style.backgroundColor = sector.color;
+                sectorEl.style.transform = `rotate(${index * angle}deg)`;
+                sectorEl.innerHTML = `<div style="transform: rotate(-${index * angle}deg)">${sector.reward}</div>`;
+                wheel.appendChild(sectorEl);
             });
         }
 
         function spinWheel() {
-            if(balance < 100) {
-                alert('Недостаточно монет!');
-                return;
-            }
-            balance -= 100;
-            updateBalance();
+            if (gameData.balance < 100) return alert('Недостаточно монет!');
+            gameData.balance -= 100;
             
             const wheel = document.getElementById('wheel');
-            const randomRotation = Math.floor(Math.random() * 360) + 1440;
-            wheel.style.transform = `rotate(${randomRotation}deg)`;
+            const spins = 1440 + Math.random() * 360;
+            wheel.style.transform = `rotate(${spins}deg)`;
 
             setTimeout(() => {
-                const finalAngle = randomRotation % 360;
-                const sectorIndex = Math.floor(finalAngle / (360 / sectors.length));
-                handlePrize(sectors[sectorIndex]);
+                const resultAngle = spins % 360;
+                const sectorIndex = Math.floor(resultAngle / (360 / sectors.length));
+                handlePrize(sectors[sectorIndex].reward);
+                saveData();
+                updateBalance();
             }, 3000);
         }
 
-        function handlePrize(prize) {
+        function handlePrize(reward) {
             let message = '';
-            switch(prize.reward) {
-                case 'x2':
-                    message = 'Активирован множитель x2 на 1 час!';
+            switch(reward) {
+                case 'x2': 
+                    message = 'Множитель x2 активирован!';
                     break;
                 case 'retry':
-                    message = 'Попробуйте ещё раз!';
-                    balance += 100;
-                    updateBalance();
+                    gameData.balance += 100;
+                    message = 'Попробуйте снова!';
                     break;
-                case 'jackpot':
-                    message = 'ДЖЕКПОТ! 1000 монет!';
-                    balance += 1000;
-                    break;
-                default:
-                    balance += prize.reward;
-                    message = `Вы выиграли ${prize.reward} монет!`;
+                default: 
+                    gameData.balance += reward;
+                    message = `Выигрыш: ${reward} монет!`;
             }
             alert(message);
+        }
+
+        function initShop() {
+            const shop = document.getElementById('shopItems');
+            for (let i = 1; i <= 10; i++) {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.innerHTML = `
+                    <h3>Уровень ${i} (+${i})</h3>
+                    <p>Цена: ${i * 200} монет</p>
+                    <button onclick="buyUpgrade(${i})">Купить</button>
+                `;
+                shop.appendChild(item);
+            }
+        }
+
+        function buyUpgrade(level) {
+            const cost = level * 200;
+            if (gameData.balance >= cost) {
+                gameData.balance -= cost;
+                gameData.tapValue += level;
+                gameData.upgrades.push(level);
+                updateBalance();
+                saveData();
+            } else {
+                alert('Недостаточно монет!');
+            }
+        }
+
+        function toggleWalletMenu() {
+            const menu = document.getElementById('walletMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function withdraw() {
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            if (amount > gameData.balance) return alert('Недостаточно средств!');
+            gameData.balance -= amount;
             updateBalance();
+            saveData();
+            alert(`${amount} монет отправлены на вывод!`);
+        }
+
+        function createCoin(x, y) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            
+            const walletPos = document.getElementById('wallet').getBoundingClientRect();
+            const tx = walletPos.x - x + Math.random() * 40 - 20;
+            const ty = walletPos.y - y + Math.random() * 40 - 20;
+            
+            coin.style.setProperty('--tx', `${tx}px`);
+            coin.style.setProperty('--ty', `${ty}px`);
+            coin.style.left = x + 'px';
+            coin.style.top = y + 'px';
+            
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 800);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('tapButton').addEventListener('click', (e) => {
+                gameData.balance += gameData.tapValue;
+                gameData.achievements.total += gameData.tapValue;
+                
+                const rect = e.target.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => createCoin(x, y), i * 50);
+                }
+                
+                updateBalance();
+                saveData();
+            });
         }
 
         function updateBalance() {
-            document.getElementById('balance').textContent = balance;
+            document.getElementById('balance').textContent = gameData.balance;
         }
 
         function showModal(type) {
@@ -280,22 +382,11 @@
             document.getElementById(`${type}Modal`).style.display = 'block';
         }
 
-        function buyUpgrade(type) {
-            if(type === 'smart_tap' && balance >= 50) {
-                balance -= 50;
-                updateBalance();
-                alert('Улучшение "Умный тап" куплено!');
-            }
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         }
 
-        // Инициализация
-        window.onload = () => {
-            initWheel();
-            document.getElementById('tapButton').addEventListener('click', function() {
-                balance += 1;
-                updateBalance();
-            });
-        };
+        window.onload = initGame;
     </script>
 </body>
 </html>
