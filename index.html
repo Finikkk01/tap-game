@@ -3,106 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turbo Тапалка PRO</title>
+    <title>Tap Game</title>
     <style>
-        body {
-            margin: 0;
-            padding: 80px 20px 120px;
-            background: linear-gradient(45deg, #1a1a2e, #16213e);
-            min-height: 100vh;
-            font-family: 'Arial', sans-serif;
-            color: white;
-            overflow-x: hidden;
+        :root {
+            --primary: #FFD700;
+            --secondary: #FFCE54;
+            --accent: #4CAF50;
+            --light-gray: #F0F0F0;
+            --achievement-gray: #D3D3D3; /* Светло-серый для достижений */
+            --shop-gray: #E8E8E8; /* Светло-серый для магазина */
+            --dark-gray: #333;
         }
 
-        .tap-container {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a1a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #tapButton {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 100;
-            touch-action: manipulation;
-        }
-
-        #tapButton {
-            width: 120px;
-            height: 120px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            background: radial-gradient(circle at 65% 15%, #ffd700, #ff8c00);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(145deg, var(--primary), var(--secondary));
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 12px 25px rgba(255, 215, 0, 0.4);
             transition: transform 0.1s;
-            touch-action: none;
+            z-index: 1000;
         }
 
-        #tapButton:active {
-            transform: scale(1.1);
+        #tapButton.x2-active {
+            animation: pulse-glow 1s infinite, shake 0.5s infinite;
+            background: linear-gradient(145deg, #4CAF50, #FFD700) !important;
         }
 
-        .coin {
-            position: fixed;
-            width: 24px;
-            height: 24px;
-            background: url('coin.png') center/contain no-repeat;
-            pointer-events: none;
-            z-index: 999;
+        @keyframes pulse-glow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(0); }
+            25% { transform: translate(-2px, 0); }
+            50% { transform: translate(2px, 0); }
+            75% { transform: translate(-2px, 0); }
+            100% { transform: translate(0); }
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                #FFD700 0%, 
+                #4CAF50 20%, 
+                #2196F3 40%, 
+                #E91E63 60%, 
+                #9C27B0 80%, 
+                #607D8B 100%
+            );
+            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            transform: rotate(0deg);
+        }
+
+        .arrow {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid red;
+            z-index: 1000;
+            margin-bottom: -10px; 
         }
 
         #wallet {
-            position: fixed;
+            position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 12px 25px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
             cursor: pointer;
-            backdrop-filter: blur(5px);
-            z-index: 1001;
+            z-index: 999;
         }
 
-        #withdrawBtn {
-            padding: 8px 15px;
-            border-radius: 15px;
-            background: #4CAF50;
-            border: none;
-            color: white;
-            cursor: not-allowed;
-            opacity: 0.7;
+        .wallet-menu {
+            display: none;
+            background: var(--secondary);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            padding: 10px;
+            position: absolute;
+            top: 40px;
+            right: 0;
         }
 
         .control-panel {
             position: fixed;
-            bottom: 15px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 20px;
-            max-width: 95%;
-            flex-wrap: wrap;
-            justify-content: center;
-            z-index: 1001;
         }
 
         .control-btn {
-            padding: 10px 15px;
-            border-radius: 12px;
-            background: linear-gradient(45deg, #2a2a72, #009ffd);
+            background: linear-gradient(145deg, #3C4D5F, #5D5F77);
             border: none;
             color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
-            flex: 1 1 auto;
-            text-align: center;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .shop-item,
+        .achievement-badge {
+            margin: 10px 0;
+            padding: 10px;
+            background: var(--shop-gray); /* Использование нового цвета для магазина */
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .modal {
@@ -111,345 +167,530 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 25px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 500px;
-            backdrop-filter: blur(10px);
-            z-index: 2000;
+            width: 80%; 
+            max-width: 600px; 
+            max-height: 80%; 
+            overflow-y: auto; 
+            background: rgba(255, 255, 255, 0.9); /* Более светлая фон */
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 1000;
+            color: black; /* Цвет текста в модальных окнах */
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
             background: none;
             border: none;
-            color: white;
+            color: black;
+            font-size: 30px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+        #prizeModal p {
             font-size: 24px;
-            cursor: pointer;
         }
 
-        .shop-item {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
+        .coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: gold;
+            border-radius: 50%;
+            animation: coin-fly 0.8s forwards;
         }
 
-        .buy-btn {
-            padding: 8px 20px;
-            background: #4CAF50;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
+        @keyframes coin-fly {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
         }
 
-        .buy-btn[disabled] {
-            background: #666;
-            cursor: not-allowed;
+        #energyStatus {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
+        #timer {
+            font-size: 18px;
+            margin-top: 5px;
+            color: #FFD700;
+        }
+
+        .energy-exhausted {
             display: none;
-            z-index: 1500;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            z-index: 1001;
+            font-size: 20px;
+            text-align: center;
         }
 
-        @media (max-width: 480px) {
-            .control-btn {
-                font-size: 12px;
-                padding: 8px 12px;
-            }
-            
-            #wallet {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
+        .bonus-text {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        #shopItems, #achievementsContent {
+            width: 100%;
+            max-height: 400px; 
+            overflow-y: auto;  
+            padding-right: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="tap-container">
-        <button id="tapButton">ТАП!</button>
-    </div>
+    <canvas id="particles"></canvas>
 
-    <div id="wallet">
-        <span>💰</span>
-        <span id="balance">0</span>
-        <button id="withdrawBtn">В процессе</button>
-    </div>
-
-    <div class="control-panel">
-        <button class="control-btn" id="shopBtn">🛒 Магазин</button>
-        <button class="control-btn" id="dailyBtn">🎁 Бонус</button>
-        <button class="control-btn" id="achieveBtn">🏆 Достижения</button>
-        <button class="control-btn" id="settingsBtn">⚙️ Настройки</button>
-    </div>
-
-    <div id="shopModal" class="modal">
-        <button class="modal-close" onclick="closeModal()">×</button>
-        <h2>🛒 Магазин улучшений</h2>
-        <div class="shop-item">
-            <h3>Умный тап (50 монет)</h3>
-            <button class="buy-btn" id="buySmartTap" onclick="buyUpgrade('smart_tap')">Купить</button>
+    <div id="wallet" onclick="toggleWalletMenu()">
+        <span>💰 <span id="balance">0</span></span>
+        <div class="wallet-menu" id="walletMenu">
+            <button class="wallet-close" onclick="toggleWalletMenu()">×</button>
+            <input type="text" id="walletAddress" placeholder="Адрес кошелька" onclick="event.stopPropagation()">
+            <input type="number" id="withdrawAmount" placeholder="Сумма" onclick="event.stopPropagation()">
+            <button onclick="withdraw()" class="control-btn" style="margin-top:10px; width:100%">Вывести</button>
         </div>
     </div>
 
-    <div id="dailyModal" class="modal">
+    <button id="tapButton">ТАП!</button>
+    <div id="energyStatus" style="position: fixed; top: calc(50% + 100px); left: 50%; transform: translate(-50%, -50%); color: white;">
+        Энергия: <span id="energy">6000</span> 
+        <div id="timer">Восстановление: <span id="timerValue">00:00</span></div>
+    </div>
+
+    <div class="control-panel">
+        <button class="control-btn" onclick="showModal('shop')">🛒 Магазин</button>
+        <button class="control-btn" onclick="showBonusModal()">🎁 Бонус</button>
+        <button class="control-btn" onclick="showAchievementsModal()">🏆 Достижения</button>
+        <button class="control-btn" onclick="showWheelModal()">🎡 Колесо фортуны</button>
+    </div>
+
+    <!-- Модальное окно для исчерпания энергии -->
+    <div class="energy-exhausted" id="energyExhaustedModal">
+        Энергия исчерпана!
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="shopModal" class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
-        <h2>🎁 Ежедневный бонус</h2>
-        <p id="bonusStatus"></p>
-        <button onclick="claimDailyBonus()">Получить</button>
+        <h2>🛒 Магазин</h2>
+        <div class="modal-content">
+            <div id="shopItems"></div>
+        </div>
+    </div>
+
+    <div id="wheelModal" class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2>🎡 Колесо фортуны</h2>
+        <div class="wheel-container">
+            <div class="wheel" id="wheel"></div>
+            <div class="arrow"></div>
+        </div>
+        <button class="control-btn" id="spinButton" onclick="spinWheel()">Крутить (100 монет)</button>
+    </div>
+
+    <div id="prizeModal" class="prize-modal">
+        <p id="prizeText"></p>
     </div>
 
     <div id="achievementsModal" class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
         <h2>🏆 Достижения</h2>
-        <ul id="achievementsList"></ul>
+        <div class="modal-content" id="achievementsContent"></div>
     </div>
 
-    <div class="modal-overlay" onclick="closeModal()"></div>
+    <div id="bonusModal" class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2>🎁 Ежедневный бонус</h2>
+        <p class="bonus-text" id="bonusMessage"></p>
+    </div>
+
+    <div id="withdrawModal" class="modal">
+        <p>Функция вывода средств в разработке...</p>
+    </div>
 
     <script>
+        // Звуковые эффекты
+        const tapSound = new Audio('path/to/tap-sound.mp3');
+        const wheelSpinSound = new Audio('path/to/wheel-spin.mp3');
+        
+        // Инициализация частиц
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const particles = Array.from({ length: 100 }, () => new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Игровая логика
         let gameData = {
-    balance: 0,
-    lastDaily: null,
-    dailyStreak: 0,
-    upgrades: {
-        smart_tap: false
-    },
-    achievements: {
-        total: 0,
-        earned: { // Добавьте эту инициализацию
-            100: false,
-            500: false, 
-            1000: false
-        }
-    }
-};
+            balance: 0,
+            tapValue: 1,
+            energy: 6000,
+            recoveryTime: 600000, // Время восстановления в мс
+            lastTapTime: Date.now(),
+            recoveryInterval: null,
+            lastDaily: null,
+            dailyStreak: 0,
+        };
 
-        // Инициализация
-        function init() {
+        const sectors = [
+            { color: "#FFD700", reward: 100 },
+            { color: "#4CAF50", reward: 200 },
+            { color: "#2196F3", reward: 'x2' },
+            { color: "#E91E63", reward: 50 },
+            { color: "#9C27B0", reward: 'retry' },
+            { color: "#607D8B", reward: 0 }
+        ];
+
+        let isSpinning = false;
+
+        function initGame() {
             loadData();
+            initShop();
             setupEventListeners();
-            checkDailyBonus();
-            updateShopButton();
-            updateBalanceDisplay();
-            updateAchievements();
+            updateBalance();
+            updateEnergy();
+            startEnergyRecovery();
         }
 
-        // Загрузка данных
         function loadData() {
-    const saved = localStorage.getItem('tapGameData');
-    if(saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            gameData = {
-                ...gameData,
-                ...parsed,
-                lastDaily: parsed.lastDaily ? new Date(parsed.lastDaily) : null,
-                achievements: {
-                    total: parsed.achievements?.total || 0, // Добавлено здесь
-                    earned: {
-                        ...gameData.achievements.earned,
-                        ...parsed.achievements?.earned
-                    }
-                }
-            };
-        } catch(e) {
-            console.error('Ошибка загрузки данных:', e);
+            const saved = localStorage.getItem('gameData');
+            if (saved) {
+                gameData = JSON.parse(saved);
+            }
         }
-    }
-}
 
-        // Сохранение данных
         function saveData() {
-            localStorage.setItem('tapGameData', JSON.stringify(gameData));
+            localStorage.setItem('gameData', JSON.stringify(gameData));
         }
 
-        // Обработчики событий
-        function setupEventListeners() {
-            const tapBtn = document.getElementById('tapButton');
-            tapBtn.addEventListener('click', handleTap);
-            tapBtn.addEventListener('touchstart', handleTap);
+        function spinWheel() {
+            if (isSpinning) return;
+            if (gameData.balance < 100) return alert('Недостаточно монет!');
 
-            document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
-            document.getElementById('dailyBtn').addEventListener('click', () => showModal('dailyModal'));
-            document.getElementById('achieveBtn').addEventListener('click', () => {
-                updateAchievements();
-                showModal('achievementsModal');
-            });
-        }
-
-        // Обработка тапов
-        function handleTap(e) {
-            const multiplier = gameData.upgrades.smart_tap ? 2 : 1;
-            addCoins(multiplier);
-            
-            const rect = e.target.getBoundingClientRect();
-            const x = rect.left + rect.width/2;
-            const y = rect.top + rect.height/2;
-            generateCoins(x, y, 10);
-        }
-
-        // Генерация монет
-        function generateCoins(x, y, count) {
-            const wallet = document.getElementById('wallet').getBoundingClientRect();
-            
-            for(let i = 0; i < count; i++) {
-                const coin = document.createElement('div');
-                coin.className = 'coin';
-                
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.random() * 100 + 50;
-                const startX = x + Math.cos(angle) * distance;
-                const startY = y + Math.sin(angle) * distance;
-
-                coin.animate([
-                    { transform: `translate(${startX}px, ${startY}px) scale(1)` },
-                    { transform: `translate(${wallet.x + 15}px, ${wallet.y + 15}px) scale(0)` }
-                ], {
-                    duration: 600 + Math.random() * 400,
-                    easing: 'ease-out'
-                }).onfinish = () => coin.remove();
-
-                document.body.appendChild(coin);
-            }
-        }
-
-        // Добавление монет
-       function addCoins(amount) {
-    const finalAmount = gameData.upgrades.smart_tap ? amount * 2 : amount;
-    gameData.balance += finalAmount;
-    gameData.achievements.total += finalAmount; // Важное изменение здесь
-    updateBalanceDisplay();
-    checkAchievements();
-    saveData();
-         }
-
-        // Обновление баланса
-        function updateBalanceDisplay() {
-            const balanceElement = document.getElementById('balance');
-            if(balanceElement) {
-                balanceElement.textContent = gameData.balance;
-                balanceElement.parentElement.classList.add('wallet-bounce');
-                setTimeout(() => {
-                    balanceElement.parentElement.classList.remove('wallet-bounce');
-                }, 500);
-            }
-        }
-
-        // Ежедневный бонус
-        function checkDailyBonus() {
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            if(gameData.lastDaily) {
-                const lastDate = new Date(gameData.lastDaily);
-                const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
-                
-                if(diffDays === 0) return;
-                
-                if(diffDays === 1) {
-                    gameData.dailyStreak = Math.min(gameData.dailyStreak + 1, 6);
-                } else {
-                    gameData.dailyStreak = 0;
-                }
-            }
-            
-            gameData.lastDaily = today;
+            wheelSpinSound.play();
+            isSpinning = true;
+            gameData.balance -= 100;
             saveData();
+            updateBalance();
+
+            const wheel = document.getElementById('wheel');
+            const startRotation = parseInt(wheel.style.transform.replace(/[^0-9]/g, '') || 0);
+            const spins = 1440 + Math.random() * 360; 
+
+            wheel.style.transition = 'transform 3s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            wheel.style.transform = `rotate(${startRotation + spins}deg)`;
+
+            setTimeout(() => {
+                const resultAngle = (startRotation + spins) % 360;
+                const sectorIndex = Math.floor((360 - resultAngle) / (360 / sectors.length)) % sectors.length;
+                handlePrize(sectors[sectorIndex]);
+                isSpinning = false;
+            }, 3000);
         }
 
-        // Покупка улучшений
-        function buyUpgrade(type) {
-            if(type === 'smart_tap') {
-                if(gameData.balance >= 50 && !gameData.upgrades.smart_tap) {
-                    gameData.balance -= 50;
-                    gameData.upgrades.smart_tap = true;
-                    updateBalanceDisplay();
-                    updateShopButton();
-                    saveData();
-                    alert('Умный тап активирован! Теперь вы получаете x2 монеты!');
-                } else if(gameData.upgrades.smart_tap) {
-                    alert('Это улучшение уже куплено!');
-                } else {
-                    alert(`Недостаточно монет! Нужно еще ${50 - gameData.balance} монет.`);
+        function handlePrize(sector) {
+            const reward = sector.reward;
+            let message = '';
+
+            if (reward === 'x2') {
+                gameData.tapValue *= 2;
+                message = 'Множитель x2 активирован!';
+                document.getElementById('tapButton').classList.add('x2-active');
+                setTimeout(() => {
+                    gameData.tapValue /= 2;
+                    document.getElementById('tapButton').classList.remove('x2-active');
+                }, 10000);
+            } else {
+                gameData.balance += reward * gameData.tapValue;
+                message = `Выигрыш: ${reward * gameData.tapValue} монет!`;
+            }
+
+            const prizeModal = document.getElementById('prizeModal');
+            const prizeText = document.getElementById('prizeText');
+            prizeText.textContent = message;
+            prizeModal.style.display = 'block';
+
+            setTimeout(() => {
+                prizeModal.style.display = 'none';
+                if (reward === 'x2') {
+                    triggerCoinRain();
                 }
+            }, 2000);
+
+            saveData();
+            updateBalance();
+        }
+
+        function triggerCoinRain() {
+            const button = document.getElementById('tapButton');
+            const rect = button.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 100; i++) {
+                createCoin(x, y);
             }
         }
 
-        // Обновление кнопки магазина
-        function updateShopButton() {
-            const btn = document.getElementById('buySmartTap');
-            if(btn) {
-                if(gameData.upgrades.smart_tap) {
-                    btn.disabled = true;
-                    btn.textContent = '✓ Куплено';
-                    btn.style.background = '#666';
-                } else {
-                    btn.textContent = `Купить (${50 - gameData.balance} осталось)`;
-                    btn.style.background = gameData.balance >= 50 ? '#4CAF50' : '#666';
-                }
+        function updateEnergy() {
+            document.getElementById('energy').textContent = gameData.energy;
+
+            if (gameData.energy <= 0) {
+                document.getElementById('energyExhaustedModal').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('energyExhaustedModal').style.display = 'none';
+                }, 2000);
+            } else {
+                document.getElementById('energyExhaustedModal').style.display = 'none';
+            }
+
+            // Обновление таймера восстановления
+            updateRecoveryTimer();
+        }
+
+        function updateRecoveryTimer() {
+            const now = Date.now();
+            const elapsed = now - gameData.lastTapTime;
+
+            if (elapsed < gameData.recoveryTime) {
+                const remaining = gameData.recoveryTime - elapsed;
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                document.getElementById('timerValue').textContent =
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('timerValue').textContent = "00:00";
+                clearInterval(gameData.recoveryInterval);
+                gameData.recoveryInterval = null;
             }
         }
 
-        // Достижения
-        function checkAchievements() {
-            const milestones = [100, 500, 1000];
-            let newAchievements = false;
+        function startEnergyRecovery() {
+            gameData.recoveryInterval = setInterval(updateRecoveryTimer, 1000);
+        }
+
+        function createCoin(x, y) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            const walletPos = document.getElementById('wallet').getBoundingClientRect();
+            const tx = walletPos.x - x + Math.random() * 80 - 40;
+            const ty = walletPos.y - y + Math.random() * 80 - 40;
+
+            coin.style.setProperty('--tx', `${tx}px`);
+            coin.style.setProperty('--ty', `${ty}px`);
+            coin.style.left = x + 'px';
+            coin.style.top = y + 'px';
+
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 800);
+        }
+
+        function initShop() {
+            const shop = document.getElementById('shopItems');
+            const prices = [150000, 450000, 750000, 1000000, 5000000, 10000000, 100000000, 500000000, 1000000000, 100000000000];
+
+            for (let i = 0; i < prices.length; i++) {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.innerHTML = `
+                    <h3>Уровень ${i + 1} (+${i + 1})</h3>
+                    <p>Цена: ${prices[i]} монет</p>
+                    <button class="control-btn" onclick="buyUpgrade(${i + 1})">Купить</button>
+                `;
+                shop.appendChild(item);
+            }
+        }
+
+        function buyUpgrade(level) {
+            const prices = [150000, 450000, 750000, 1000000, 5000000, 10000000, 100000000, 500000000, 1000000000, 100000000000];
+            const cost = prices[level - 1];
+
+            if (gameData.balance >= cost) {
+                gameData.balance -= cost;
+                gameData.tapValue += level;
+                saveData();
+                updateBalance();
+                alert(`Уровень ${level} успешно куплен!`);
+            } else {
+                alert('Недостаточно монет!');
+            }
+        }
+
+        function showBonusModal() {
+            const canClaim = !gameData.lastDaily || (Date.now() - gameData.lastDaily) > 24 * 60 * 60 * 1000;
+
+            if (canClaim) {
+                const bonus = 500 + gameData.dailyStreak * 100;
+                gameData.balance += bonus;
+                gameData.dailyStreak++;
+                gameData.lastDaily = Date.now();
+                
+                document.getElementById('bonusMessage').textContent =
+                    `Получено ${bonus} монет! Текущая серия: ${gameData.dailyStreak} дней`;
+                
+                saveData();
+                updateBalance();
+            } else {
+                document.getElementById('bonusMessage').textContent = 'Вы уже получали бонус сегодня!';
+            }
+            showModal('bonus');
+        }
+
+        function showAchievementsModal() {
+            const achievements = [
+                { condition: 1000, name: 'Новичок', type: 'clicks' },
+                { condition: 5000, name: 'Любитель', type: 'clicks' },
+                { condition: 10000, name: 'Профессионал', type: 'clicks' },
+                { condition: 5000, name: 'Золотой запасец', type: 'coins' },
+                { condition: 20000, name: 'Криптомагнат', type: 'coins' }
+            ];
+
+            let content = '';
+            achievements.forEach(ach => {
+                const current = ach.type === 'coins' ? gameData.balance : gameData.tapValue;
+                const earned = current >= ach.condition;
+                content += `
+                    <div class="shop-item" style="text-align:left; margin:10px 0; background: var(--achievement-gray)">
+                        <div style="display:flex; align-items:center; gap:10px">
+                            ${earned ? 
+                                '<img src="https://img.icons8.com/3d-fluency/50/medal2.png" class="achievement-badge">' : 
+                                '<img src="https://img.icons8.com/3d-fluency/50/lock--v1.png" class="achievement-badge">'}
+                            <div>
+                                <h3>${ach.name}</h3>
+                                <small>${ach.type === 'coins' ? 'Заработано монет: ' : 'Кликов: '}${ach.condition}</small>
+                                ${!earned && `<progress value="${current}" max="${ach.condition}" style="width:100%"></progress>`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
             
-            milestones.forEach(amount => {
-                if(gameData.achievements.total >= amount && !gameData.achievements.earned[amount]) {
-                    gameData.achievements.earned[amount] = true;
-                    newAchievements = true;
-                }
+            document.getElementById('achievementsContent').innerHTML = content;
+            showModal('achievements');
+        }
+
+        function showWheelModal() {
+            const wheelModal = document.getElementById('wheelModal');
+            wheelModal.style.display = 'block';
+        }
+
+        function toggleWalletMenu() {
+            const menu = document.getElementById('walletMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function withdraw() {
+            showWithdrawMessage();
+        }
+
+        function showWithdrawMessage() {
+            const withdrawModal = document.getElementById('withdrawModal');
+            withdrawModal.style.display = 'block';
+
+            setTimeout(() => {
+                withdrawModal.style.display = 'none';
+            }, 3000);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('tapButton').addEventListener('click', handleTap);
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal();
+                });
             });
 
-            if(newAchievements) {
-                updateAchievements();
-                saveData();
-            }
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
         }
 
-        function updateAchievements() {
-    const list = document.getElementById('achievementsList');
-    if(list) {
-        list.innerHTML = `
-            <li style="margin-bottom: 15px; color: #ffd700;">Всего заработано: ${gameData.achievements.total} монет</li>
-            ${Object.entries(gameData.achievements.earned)
-                .sort((a, b) => a[0] - b[0])
-                .map(([amount, earned]) => `
-                    <li style="margin: 8px 0; display: flex; justify-content: space-between;">
-                        <span>${amount} монет:</span>
-                        <span>${earned ? '✅ Открыто' : '🔒 Закрыто'}</span>
-                    </li>
-                `).join('')}
-        `;
-    }
-}
+        function handleTap() {
+            if (gameData.energy <= 0) {
+                document.getElementById('energyExhaustedModal').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('energyExhaustedModal').style.display = 'none';
+                }, 2000);
+                return;
+            }
 
-        // Модальные окна
-        function showModal(id) {
-            document.querySelector('.modal-overlay').style.display = 'block';
-            document.getElementById(id).style.display = 'block';
+            tapSound.play();
+            gameData.balance += gameData.tapValue;
+
+            gameData.energy -= gameData.tapValue;
+            gameData.lastTapTime = Date.now(); // Обновление времени последнего нажатия
+            updateEnergy();
+            updateBalance();
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = gameData.balance;
+        }
+
+        function showModal(type) {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.getElementById(`${type}Modal`).style.display = 'block';
         }
 
         function closeModal() {
-            document.querySelector('.modal-overlay').style.display = 'none';
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.getElementById('walletMenu').style.display = 'none';
         }
 
-        // Запуск
-        window.onload = init;
+        window.onload = initGame;
     </script>
 </body>
 </html>
